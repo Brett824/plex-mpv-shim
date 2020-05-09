@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import pyperclip
 import requests
 import urllib.parse
 
@@ -95,6 +96,10 @@ class PlayerManager(object):
                 "mpv_location": settings.mpv_ext_path,
                 "player-operation-mode": "cplayer"
             }
+        # todo figure out how to put these in a file
+        extra_options = {
+            'script-opts': 'osc-layout=slimbox,osc-deadzonesize=.9,osc-valign=1.05',
+        }
         self._player = mpv.MPV(input_default_bindings=True, input_vo_keyboard=True,
                                input_media_keys=True, include=mpv_config, input_conf=input_config,
                                log_handler=mpv_log_handler, loglevel=settings.mpv_log_level,
@@ -205,6 +210,14 @@ class PlayerManager(object):
         def handle_debug():
             import pdb
             pdb.set_trace()
+
+        @self._player.on_key_press('ctrl+c')
+        def copy_current_sub():
+            try:
+                sub = self._player.sub_text
+                pyperclip.copy(sub)
+            except AttributeError:
+                pass  # no subtitle available.
 
         # Fires between episodes.
         @self._player.property_observer('eof-reached')
