@@ -215,6 +215,31 @@ class PlayerManager(object):
             except AttributeError:
                 pass  # no subtitle available.
 
+        @self._player.on_key_press('ctrl+a')
+        def output_audio():
+            import subprocess
+            import string
+            import unicodedata
+            sub_start = self._player.sub_start
+            if sub_start:
+                print("Outputting current subtitle...")
+                valid_fn_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+                fn_dirty = "%s - %s" % (self._player.media_title, str(int(sub_start * 1000)))
+                fn = unicodedata.normalize('NFKD', fn_dirty).encode('ASCII', 'ignore')
+                fn = ''.join(chr(c) for c in fn if chr(c) in valid_fn_chars)
+                subprocess.Popen([
+                    'mpv',
+                    self.url,
+                    '-o',
+                    '%s.mp3' % fn,
+                    '--no-video',
+                    '--start=%s' % sub_start,
+                    '--end=%s' % self._player.sub_end,
+                ])
+                self._player.screenshot_to_file("%s.png" % fn, includes='video')
+                with open('%s.txt' % fn, 'w+', encoding='utf-8') as f:
+                    f.write(self._player.sub_text)
+
         # Fires between episodes.
         @self._player.property_observer('eof-reached')
         def handle_end(_name, reached_end):
