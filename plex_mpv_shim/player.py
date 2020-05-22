@@ -234,6 +234,28 @@ class PlayerManager(object):
             except AttributeError:
                 pass  # no subtitle available.
 
+        def copy_screenshot(subtitles=True):
+            includes = 'subtitles' if subtitles else 'video'
+            from io import BytesIO
+            import win32clipboard
+            image = self._player.screenshot_raw(includes=includes)
+            output = BytesIO()
+            image.convert("RGB").save(output, "BMP")
+            data = output.getvalue()[14:]
+            output.close()
+            win32clipboard.OpenClipboard()
+            win32clipboard.EmptyClipboard()
+            win32clipboard.SetClipboardData(win32clipboard.CF_DIB, data)
+            win32clipboard.CloseClipboard()
+
+        @self._player.on_key_press('ctrl+s')
+        def copy_current_image():
+            copy_screenshot(subtitles=True)
+
+        @self._player.on_key_press('ctrl+shift+s')
+        def copy_current_image():
+            copy_screenshot(subtitles=False)
+
         @self._player.on_key_press('ctrl+a')
         def output_audio():
             import subprocess
