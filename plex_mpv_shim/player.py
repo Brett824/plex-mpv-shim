@@ -106,6 +106,16 @@ class PlayerManager(object):
                                log_handler=mpv_log_handler, loglevel=settings.mpv_log_level,
                                **extra_options)
         self.menu = OSDMenu(self)
+        self.auto_insert = False
+
+        def on_new_sub(name, text):
+            if not self.auto_insert:
+                return
+                return
+            pyperclip.copy(text.replace('\n', ' '))
+
+        self._player.observe_property('sub-text', on_new_sub)
+
         if hasattr(self._player, 'osc'):
             self._player.osc = settings.enable_osc
         else:
@@ -256,7 +266,7 @@ class PlayerManager(object):
         def copy_current_image():
             copy_screenshot(subtitles=False)
 
-        @self._player.on_key_press('ctrl+a')
+        @self._player.on_key_press('ctrl+v')
         def output_audio():
             import subprocess
             import string
@@ -280,6 +290,11 @@ class PlayerManager(object):
                 self._player.screenshot_to_file("%s.png" % fn, includes='video')
                 with open('%s.txt' % fn, 'w+', encoding='utf-8') as f:
                     f.write(self._player.sub_text)
+
+        @self._player.on_key_press('ctrl+a')
+        def toggle_auto_insert():
+            self.auto_insert = not self.auto_insert
+            self._player.show_text('Auto insert %s' % ("on" if self.auto_insert else "off"))
 
         # Fires between episodes.
         @self._player.property_observer('eof-reached')
