@@ -111,6 +111,7 @@ class PlayerManager(object):
         def on_new_sub(name, text):
             if not self.auto_insert:
                 return
+            if not text or not text.strip():
                 return
             pyperclip.copy(text.replace('\n', ' '))
 
