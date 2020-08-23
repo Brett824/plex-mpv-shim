@@ -3,3 +3,5 @@ dist
 build
 plex_mpv_shim.egg-info
 plex_mpv_shim/default_shader_pack/*
+.idea/
+mpv-1.dll
