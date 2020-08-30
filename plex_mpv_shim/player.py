@@ -280,6 +280,8 @@ class PlayerManager(object):
                 fn_dirty = "%s - %s" % (self._player.media_title, str(int(sub_start * 1000)))
                 fn = unicodedata.normalize('NFKD', fn_dirty).encode('ASCII', 'ignore')
                 fn = ''.join(chr(c) for c in fn if chr(c) in valid_fn_chars)
+                aid = [x for x in self._player.track_list
+                       if x.get("type") == "audio" and x.get("selected")][0].get("id")
                 subprocess.Popen([
                     'mpv',
                     self.url,
@@ -288,6 +290,7 @@ class PlayerManager(object):
                     '--no-video',
                     '--start=%s' % sub_start,
                     '--end=%s' % self._player.sub_end,
+                    '--aid=%s' % aid,
                 ])
                 self._player.screenshot_to_file("%s.png" % fn, includes='video')
                 with open('%s.txt' % fn, 'w+', encoding='utf-8') as f:
