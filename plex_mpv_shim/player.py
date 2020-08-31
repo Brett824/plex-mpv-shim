@@ -273,7 +273,8 @@ class PlayerManager(object):
             import subprocess
             import string
             import unicodedata
-            sub_start = self._player.sub_start
+            sub_delay = round(self._player.sub_delay, 4)  # round b/c of weird mpv precision
+            sub_start = self._player.sub_start + sub_delay
             if sub_start:
                 print("Outputting current subtitle...")
                 valid_fn_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
@@ -289,7 +290,7 @@ class PlayerManager(object):
                     '%s.mp3' % fn,
                     '--no-video',
                     '--start=%s' % sub_start,
-                    '--end=%s' % self._player.sub_end,
+                    '--end=%s' % (self._player.sub_end + sub_delay),
                     '--aid=%s' % aid,
                 ])
                 self._player.screenshot_to_file("%s.png" % fn, includes='video')
