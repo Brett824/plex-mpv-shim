@@ -148,6 +148,9 @@ for media playback on OSX.
 - `mpv_ext_start` - Start a managed copy of MPV with the client. Default: `true`
     - If not specified, the user must start MPV prior to launching the client.
     - MPV must be launched with `--input-ipc-server=[value of mpv_ext_ipc]`.
+- `mpv_ext_no_ovr` - Disable built-in mpv configuration files and use user defaults.
+    - Please note that some scripts and settings, such as ones to keep MPV open, may break
+      functionality in MPV Shim.
 
 ### Keyboard Shortcuts
 
@@ -202,7 +205,7 @@ under Settings > Control options. Adjust the `svp_url` and `svp_socket` settings
     - Default on Windows: `mpvpipe`
     - Default on other platforms: `/tmp/mpvsocket`
 
-Currently on Windows the built-in MPV does now work with SVP. You must download MPV yourself.
+Currently on Windows the built-in MPV does not work with SVP. You must download MPV yourself.
 
  - Download the latest MPV build [from here](https://sourceforge.net/projects/mpv-player-windows/files/64bit/).
  - Follow the [vapoursynth instructions](https://github.com/shinchiro/mpv-winbuild-cmake/wiki/Setup-vapoursynth-for-mpv).
@@ -441,4 +444,4 @@ and libmpv libraries are either 64 or 32 bit. (Don't mismatch them.)
 4. Extract the `mpv-1.dll` from the file and move it to the `plex-mpv-shim` folder.
 5. Open a regular `cmd` prompt. Navigate to the `plex-mpv-shim` folder.
 6. If you would like the shader pack included, [download it](https://github.com/iwalton3/default-shader-pack) and put the contents into `plex_mpv_shim\default_shader_pack`.
-7. Run `pyinstaller -wF --add-binary "mpv-1.dll;." --add-data "plex_mpv_shim\default_shader_pack;plex_mpv_shim\default_shader_pack" --add-binary "plex_mpv_shim\systray.png;." --icon media.ico run.py`.
+7. Run `pyinstaller -wF --add-binary "mpv-1.dll;." --add-data "plex_mpv_shim\default_shader_pack;plex_mpv_shim\default_shader_pack" --add-binary "plex_mpv_shim\systray.png;." --icon media.ico run.py --hidden-import pystray._win32`.
