@@ -4,6 +4,7 @@ import sys
 import pyperclip
 import requests
 import urllib.parse
+from pathlib import Path
 
 from threading import RLock, Lock
 from queue import Queue
@@ -14,6 +15,7 @@ from .utils import synchronous, Timer
 from .conf import settings
 from .menu import OSDMenu
 from .media import MediaType
+from .conffile import confdir
 
 log = logging.getLogger('player')
 mpv_log = logging.getLogger('mpv')
@@ -100,11 +102,16 @@ class PlayerManager(object):
                     "player-operation-mode": "cplayer"
                 }
             )
+
+        conf_dir = Path(confdir("plex-mpv-shim"))
+        log_dir = conf_dir / "mpv.log"
+        scripts = ":".join([str(x) for x in (conf_dir / "scripts").glob("*.lua")])
+
         # todo figure out how to put these in a file
         mpv_options.update({
             'script-opts': 'osc-layout=slimbox,osc-deadzonesize=.9,osc-valign=1.05',
-            'scripts': r'C:\Users\Yeezus\AppData\Roaming\plex-mpv-shim\scripts\animecards_v35.lua',
-            'log-file': r'C:\Users\Yeezus\AppData\Roaming\plex-mpv-shim\mpv.log',
+            'scripts': scripts,
+            'log-file': log_dir,
         })
 
         if not (settings.mpv_ext and settings.mpv_ext_no_ovr):
