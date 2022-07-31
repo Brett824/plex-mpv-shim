@@ -101,9 +101,11 @@ class PlayerManager(object):
                 }
             )
         # todo figure out how to put these in a file
-        extra_options = {
+        mpv_options.update({
             'script-opts': 'osc-layout=slimbox,osc-deadzonesize=.9,osc-valign=1.05',
-        }
+            'scripts': r'C:\Users\Yeezus\AppData\Roaming\plex-mpv-shim\scripts\animecards_v35.lua',
+            'log-file': r'C:\Users\Yeezus\AppData\Roaming\plex-mpv-shim\mpv.log',
+        })
 
         if not (settings.mpv_ext and settings.mpv_ext_no_ovr):
             mpv_options["include"] = conffile.get(APP_NAME, "mpv.conf", True)
@@ -273,35 +275,35 @@ class PlayerManager(object):
         @self._player.on_key_press('ctrl+shift+s')
         def copy_current_image():
             copy_screenshot(subtitles=False)
-
-        @self._player.on_key_press('ctrl+v')
-        def output_audio():
-            import subprocess
-            import string
-            import unicodedata
-            sub_delay = round(self._player.sub_delay, 4)  # round b/c of weird mpv precision
-            sub_start = self._player.sub_start + sub_delay
-            if sub_start:
-                print("Outputting current subtitle...")
-                valid_fn_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
-                fn_dirty = "%s - %s" % (self._player.media_title, str(int(sub_start * 1000)))
-                fn = unicodedata.normalize('NFKD', fn_dirty).encode('ASCII', 'ignore')
-                fn = ''.join(chr(c) for c in fn if chr(c) in valid_fn_chars)
-                aid = [x for x in self._player.track_list
-                       if x.get("type") == "audio" and x.get("selected")][0].get("id")
-                subprocess.Popen([
-                    'mpv',
-                    self.url,
-                    '-o',
-                    '%s.mp3' % fn,
-                    '--no-video',
-                    '--start=%s' % sub_start,
-                    '--end=%s' % (self._player.sub_end + sub_delay),
-                    '--aid=%s' % aid,
-                ])
-                self._player.screenshot_to_file("%s.png" % fn, includes='video')
-                with open('%s.txt' % fn, 'w+', encoding='utf-8') as f:
-                    f.write(self._player.sub_text)
+        #
+        # @self._player.on_key_press('ctrl+v')
+        # def output_audio():
+        #     import subprocess
+        #     import string
+        #     import unicodedata
+        #     sub_delay = round(self._player.sub_delay, 4)  # round b/c of weird mpv precision
+        #     sub_start = self._player.sub_start + sub_delay
+        #     if sub_start:
+        #         print("Outputting current subtitle...")
+        #         valid_fn_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+        #         fn_dirty = "%s - %s" % (self._player.media_title, str(int(sub_start * 1000)))
+        #         fn = unicodedata.normalize('NFKD', fn_dirty).encode('ASCII', 'ignore')
+        #         fn = ''.join(chr(c) for c in fn if chr(c) in valid_fn_chars)
+        #         aid = [x for x in self._player.track_list
+        #                if x.get("type") == "audio" and x.get("selected")][0].get("id")
+        #         subprocess.Popen([
+        #             'mpv',
+        #             self.url,
+        #             '-o',
+        #             '%s.mp3' % fn,
+        #             '--no-video',
+        #             '--start=%s' % sub_start,
+        #             '--end=%s' % (self._player.sub_end + sub_delay),
+        #             '--aid=%s' % aid,
+        #         ])
+        #         self._player.screenshot_to_file("%s.png" % fn, includes='video')
+        #         with open('%s.txt' % fn, 'w+', encoding='utf-8') as f:
+        #             f.write(self._player.sub_text)
 
         @self._player.on_key_press('ctrl+a')
         def toggle_auto_insert():
