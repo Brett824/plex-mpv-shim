@@ -282,7 +282,7 @@ local function create_screenshot(s, e)
   elseif IMAGE_FORMAT == 'png' then
     table.insert(cmd, '--vf-add=format=rgb24')
   end
-  table.insert(cmd, '--vf-add="scale=480*iw*sar/ih:480,scale=out_range=pc:out_color_matrix=bt.601"')
+  table.insert(cmd, '--vf=scale=480*iw*sar/ih:480,scale=out_range=pc:out_color_matrix=bt.601')
   table.insert(cmd, string.format('--start=%.3f', mp.get_property_number("time-pos")))
   table.insert(cmd, string.format('-o=%s', img))
   mp.commandv(table.unpack(cmd))
