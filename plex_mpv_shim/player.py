@@ -92,6 +92,9 @@ class PlayerManager(object):
         self.evt_queue = Queue()
         self.is_in_intro = False
         self.intro_has_triggered = False
+        self.current_sub_track = None
+        self.last_sub_track = None
+
 
         if is_using_ext_mpv:
             mpv_options.update(
@@ -279,9 +282,19 @@ class PlayerManager(object):
         def copy_current_image():
             copy_screenshot(subtitles=True)
 
+        @self._player.on_key_press('ctrl+w')
+        def noop():
+            return
+
         @self._player.on_key_press('ctrl+shift+s')
         def copy_current_image():
             copy_screenshot(subtitles=False)
+
+        @self._player.on_key_press('j')
+        def swap_subs():
+            if self.current_sub_track and self.last_sub_track:
+                self._player.sub = self.last_sub_track
+
         #
         # @self._player.on_key_press('ctrl+v')
         # def output_audio():
@@ -312,14 +325,46 @@ class PlayerManager(object):
         #         with open('%s.txt' % fn, 'w+', encoding='utf-8') as f:
         #             f.write(self._player.sub_text)
 
-        @self._player.on_key_press('ctrl+a')
-        def toggle_auto_insert():
-            self.auto_insert = not self.auto_insert
-            self._player.show_text('Auto insert %s' % ("on" if self.auto_insert else "off"))
+        # @self._player.on_key_press('ctrl+a')
+        # def toggle_auto_insert():
+        #     self.auto_insert = not self.auto_insert
+        #     self._player.show_text('Auto insert %s' % ("on" if self.auto_insert else "off"))
+
+        @self._player.on_key_press('b')
+        def make_clip():
+            start = self._player.ab_loop_a
+            end = self._player.ab_loop_b
+            if start != 'no' and end != 'no':
+                import subprocess
+                import string
+                import unicodedata
+                valid_fn_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+                fn_dirty = "%s - %s" % (self._player.media_title, str(int(start * 1000)))
+                fn = unicodedata.normalize('NFKD', fn_dirty).encode('ASCII', 'ignore')
+                fn = ''.join(chr(c) for c in fn if chr(c) in valid_fn_chars)
+                aid = [x for x in self._player.track_list
+                       if x.get("type") == "audio" and x.get("selected")][0].get("id")
+                sub = [x for x in self._player.track_list
+                       if x.get("type") == "sub" and x.get("selected")]
+                sid = sub[0].get("id") if sub else None
+                options = [
+                    'mpv',
+                    self.url,
+                    '-o',
+                    fr"C:\Users\bshei\Videos\mpv\{fn}.mkv",
+                    '--start=%s' % start,
+                    '--end=%s' % end,
+                    # '--aid=%s' % aid,
+                ]
+                # if sid:
+                #     options.append('--sid=%s' % sid)
+                subprocess.Popen(options)
 
         # Fires between episodes.
         @self._player.property_observer('eof-reached')
         def handle_end(_name, reached_end):
+            self.last_sub_track = None
+            self.current_sub_track = None
             if self._media_item and reached_end:
                 has_lock = self._finished_lock.acquire(False)
                 self.put_task(self.finished_callback, has_lock)
@@ -327,9 +372,37 @@ class PlayerManager(object):
         # Fires at the end.
         @self._player.event_callback('idle')
         def handle_end_idle(event):
+            self.last_sub_track = None
+            self.current_sub_track = None
             if self._media_item:
                 has_lock = self._finished_lock.acquire(False)
                 self.put_task(self.finished_callback, has_lock)
+
+        @self._player.property_observer('track-list')
+        def track_switch(_name, tracks):
+            def forced_or_signs(sub):
+                return sub.get("forced") or (sub.get("title") and "signs" in sub.get("title").lower())
+            if not tracks:
+                return
+            selected_sub_info = [x for x in self._player.track_list if x.get("type") == "sub" and x.get("selected")]
+            if not selected_sub_info:
+                return
+            selected_sub = selected_sub_info[0].get("id")
+            if selected_sub == self.current_sub_track:
+                return
+            if self.current_sub_track:
+                self.last_sub_track = self.current_sub_track
+            elif selected_sub_info[0]["external"]:
+                # try to set the last sub track to english or first unknown
+                english_info = [x for x in self._player.track_list if x.get("type") == "sub" and x.get("lang") == "eng"]
+                # remove "forced" only if there's multiple
+                if len(english_info) > 1:
+                    english_info = [x for x in english_info if not forced_or_signs(x)]
+                if english_info:
+                    self.last_sub_track = english_info[0].get("id")
+            if not self.last_sub_track and forced_or_signs(selected_sub_info[0]):
+                return
+            self.current_sub_track = selected_sub
 
     # Put a task to the event queue.
     # This ensures the task executes outside
@@ -509,7 +582,7 @@ class PlayerManager(object):
     def finished_callback(self, has_lock):
         if not self._media_item:
             return
-       
+
         self._media_item.set_played()
 
         if self._media_item.is_multipart():

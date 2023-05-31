@@ -213,10 +213,17 @@ class Video(MediaItem):
                         title = "%s (%s)" % (title, year)
                 elif media_type == "episode":
                     episode_name   = self.node.get("title")
-                    episode_number = int(self.node.get("index"))
-                    season_number  = int(self.node.get("parentIndex"))
+                    if self.node.get("index"):
+                        episode_number = int(self.node.get("index"))
+                        episode_number = "%.2d" % episode_number
+                    else:  # probably a date-based series
+                        episode_number = self.node.get("originallyAvailableAt")
+                    if self.node.get("parentIndex"):
+                        season_number = int(self.node.get("parentIndex"))
+                    else:
+                        season_number = 0
                     series_name    = self.node.get("grandparentTitle")
-                    title = "%s - s%de%.2d - %s" % (series_name, season_number, episode_number, episode_name)
+                    title = "%s - s%de%s - %s" % (series_name, season_number, episode_number, episode_name)
                 else:
                     # "clip", ...
                     title = self.node.get("title")
