@@ -193,6 +193,7 @@ use `shader_pack_custom`.
  - `shader_pack_remember` - Automatically remember the last used shader profile. (Default: `true`)
  - `shader_pack_profile` - The default profile to use. (Default: `null`)
     - If you use `shader_pack_remember`, this will be updated when you set a profile through the UI.
+ - `shader_pack_subtype` - The profile group to use. The default pack contains `lq` and `hq` groups. Use `hq` if you have a fancy graphics card.
 
 ### SVP Integration
 
@@ -241,6 +242,8 @@ Currently on Windows the built-in MPV does not work with SVP. You must download 
  - `stop_idle` - Stop the player when idle. (Requires `idle_when_paused`.) Default: `false`
  - `skip_intro_always` - Always skip intros, without asking. Default: `false`
  - `skip_intro_prompt` - Prompt to skip intro via seeking. Default: `true`
+ - `menu_mouse` - Enable mouse support in the menu. Default: `true`
+     - This requires MPV to be compiled with lua support.
 
 ### MPV Configuration
 
@@ -393,11 +396,13 @@ in the shader pack are also available under verious open source licenses,
 
 If you are on Linux, you can install via pip. You'll need [libmpv1](https://github.com/Kagami/mpv.js/blob/master/README.md#get-libmpv) or `mpv` installed.
 ```bash
-sudo pip3 install --upgrade plex-mpv-shim
+pip3 install --upgrade plex-mpv-shim
 ```
+Note: Recent distributions make pip unusable by default. Consider using conda or add a virtualenv to your user's path.
+
 If you would like the GUI and systray features, also install `pystray` and `tkinter`:
 ```bash
-sudo pip3 install pystray
+pip3 install pystray
 sudo apt install python3-tk
 ```
 
@@ -420,7 +425,7 @@ To install the CLI version:
 
 1. Install brew. ([Instructions](https://brew.sh/))
 2. Install python3 and mpv. `brew install python mpv`
-3. Install jellyfin-mpv-shim. `pip3 install --upgrade plex-mpv-shim`
+3. Install plex-mpv-shim. `pip3 install --upgrade plex-mpv-shim`
 4. Run `plex-mpv-shim`.
 
 If you'd like to install the GUI version, you need a working copy of tkinter.
@@ -429,7 +434,7 @@ If you'd like to install the GUI version, you need a working copy of tkinter.
 2. Install TK and mpv. `brew install tcl-tk mpv`
 3. Install python3 with TK support. `FLAGS="-I$(brew --prefix tcl-tk)/include" pyenv install 3.8.1`
 4. Set this python3 as the default. `pyenv global 3.8.1`
-5. Install jellyfin-mpv-shim and pystray. `pip3 install --upgrade plex-mpv-shim pystray`
+5. Install plex-mpv-shim and pystray. `pip3 install --upgrade plex-mpv-shim pystray`
 6. Run `plex-mpv-shim`.
 
 ## Building on Windows

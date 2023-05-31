@@ -151,7 +151,6 @@ def is_local_domain(domain):
             log.warning("Unable to check local/remote for domain: %s" % domain, exc_info=True)
         return False
 
-
 def sanitize_msg(text):
     if settings.sanitize_output:
         return re.sub(PLEX_TOKEN_RE, "\\1=REDACTED", text)

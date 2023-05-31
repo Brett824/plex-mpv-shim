@@ -11,7 +11,7 @@ from queue import Queue
 from collections import OrderedDict
 
 from . import conffile
-from .utils import synchronous, Timer
+from .utils import synchronous, Timer, get_resource
 from .conf import settings
 from .menu import OSDMenu
 from .media import MediaType
@@ -106,6 +106,13 @@ class PlayerManager(object):
                 }
             )
 
+        if settings.menu_mouse:
+            if is_using_ext_mpv:
+                mpv_options["script"] = get_resource("mouse.lua")
+            else:
+                mpv_options["scripts"] = get_resource("mouse.lua")
+
+        # TODO make this compatible with the mouse thing
         conf_dir = Path(confdir("plex-mpv-shim"))
         log_dir = conf_dir / "mpv.log"
         scripts = ":".join([str(x) for x in (conf_dir / "scripts").glob("*.lua")])
@@ -369,19 +376,44 @@ class PlayerManager(object):
                 has_lock = self._finished_lock.acquire(False)
                 self.put_task(self.finished_callback, has_lock)
 
-        # Fires at the end.
-        @self._player.event_callback('idle')
-        def handle_end_idle(event):
-            self.last_sub_track = None
-            self.current_sub_track = None
-            if self._media_item:
+        @self._player.property_observer("playback-abort")
+        def handle_end_idle(_name, value):
+            if self._media_item and value:
                 has_lock = self._finished_lock.acquire(False)
                 self.put_task(self.finished_callback, has_lock)
+
+        @self._player.event_callback('client-message')
+        def handle_client_message(event):
+            try:
+                # Python-MPV 1.0 uses a class/struct combination now
+                if hasattr(event, "as_dict"):
+                    event = event.as_dict()
+                    if 'event' in event:
+                        event['event'] = event['event'].decode('utf-8')
+                    if 'args' in event:
+                        event['args'] = [d.decode('utf-8') for d in event['args']]
+
+                if "event_id" in event:
+                    args = event["event"]["args"]
+                else:
+                    args = event["args"]
+                if len(args) == 0:
+                    return
+                if args[0] == "shim-menu-select":
+                    # Apparently this can happen...
+                    if args[1] == "inf":
+                        return
+                    self.menu.mouse_select(int(args[1]))
+                elif args[0] == "shim-menu-click":
+                    self.menu.menu_action("ok")
+            except Exception:
+                log.warning("Error when processing client-message.", exc_info=True)
 
         @self._player.property_observer('track-list')
         def track_switch(_name, tracks):
             def forced_or_signs(sub):
                 return sub.get("forced") or (sub.get("title") and "signs" in sub.get("title").lower())
+
             if not tracks:
                 return
             selected_sub_info = [x for x in self._player.track_list if x.get("type") == "sub" and x.get("selected")]
