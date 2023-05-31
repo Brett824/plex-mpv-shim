@@ -106,21 +106,25 @@ class PlayerManager(object):
                 }
             )
 
+        scripts = []
+
         if settings.menu_mouse:
             if is_using_ext_mpv:
                 mpv_options["script"] = get_resource("mouse.lua")
             else:
-                mpv_options["scripts"] = get_resource("mouse.lua")
+                scripts.append(get_resource("mouse.lua"))
+
+        scripts.append(get_resource("animecards_script_modified.lua"))
 
         # TODO make this compatible with the mouse thing
         conf_dir = Path(confdir("plex-mpv-shim"))
         log_dir = conf_dir / "mpv.log"
-        scripts = ":".join([str(x) for x in (conf_dir / "scripts").glob("*.lua")])
+        scripts_opt = ";".join(scripts)  # TODO windows only
 
         # todo figure out how to put these in a file
         mpv_options.update({
             'script-opts': 'osc-layout=slimbox,osc-deadzonesize=.9,osc-valign=1.05',
-            'scripts': scripts,
+            'scripts': scripts_opt,
             'log-file': log_dir,
         })
 

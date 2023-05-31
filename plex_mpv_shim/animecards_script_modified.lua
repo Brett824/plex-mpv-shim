@@ -50,7 +50,7 @@ local AUTOPLAY_AUDIO = false
 -- Change to "jpeg" if you plan to view cards on iOS or Mac.
 local IMAGE_FORMAT = "jpeg"
 -- Optional set to true if you want your volume in mpv to affect Anki card volume.
-local USE_MPV_VOLUME = true
+local USE_MPV_VOLUME = false
 ---------------------------------------
 
 local subs = {}
