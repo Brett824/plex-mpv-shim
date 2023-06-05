@@ -443,6 +443,11 @@ class PlayerManager(object):
                     english_info = [x for x in english_info if not forced_or_signs(x)]
                 if english_info:
                     self.last_sub_track = english_info[0].get("id")
+                else:
+                    # common old horriblesubs case - one unknown stream
+                    non_external_subs = [x for x in self._player.track_list if x.get("type") == "sub" and not x.get("external")]
+                    if len(non_external_subs) == 1 and not non_external_subs[0].get("lang"):
+                        self.last_sub_track = non_external_subs[0].get("id")
             if not self.last_sub_track and forced_or_signs(selected_sub_info[0]):
                 return
             self.current_sub_track = selected_sub
