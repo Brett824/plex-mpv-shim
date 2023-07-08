@@ -66,6 +66,17 @@ def process_series(mode, url, player, m_raid=None, m_rsid=None):
                     render_message("{0}: No Subtitles".format(name), show_text)
                     aid = audio.id
                     partial_ct += 1
+            elif mode == "external":
+                audio, _ = get_subbed(part)
+                subtitle = None
+                possible_external = [x for x in part.subtitle if 'external' in x.plex_name.lower()]
+                if possible_external:
+                    subtitle = possible_external[0]
+                if audio and subtitle:
+                    render_message("{0}: {1} ({2})".format(
+                        name, subtitle.plex_name, subtitle.name), show_text)
+                    aid, sid = audio.id, subtitle.id
+                    success_ct += 1
             elif mode == "manual":
                 if m_raid < len(part.audio) and m_rsid < len(part.subtitle):
                     audio = part.audio[m_raid]
@@ -99,6 +110,9 @@ def process_series(mode, url, player, m_raid=None, m_rsid=None):
     elif mode == "dubbed":
         render_message("Set Dubbed: {0} ok, {1} audio only, {2} fail".format(
             success_ct, partial_ct, count-success_ct-partial_ct), show_text)
+    elif mode == "external":
+        render_message("Set Subbed: {0} ok, {1} fail".format(
+            success_ct, count-success_ct), show_text)
     elif mode == "manual":
         render_message("Manual: {0} ok, {1} fail".format(
             success_ct, count-success_ct), show_text)

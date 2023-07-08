@@ -316,6 +316,7 @@ class OSDMenu(object):
 
     def change_tracks_menu(self):
         self.put_menu("Select Audio/Subtitle for Series", [
+            ("Japanese Audio w/ External Subtitles", self.change_tracks_handle, "external"),
             ("English Audio", self.change_tracks_handle, "dubbed"),
             ("Japanese Audio w/ English Subtitles", self.change_tracks_handle, "subbed"),
             ("Manual by Track Index (Less Reliable)", self.change_tracks_manual_s1),
