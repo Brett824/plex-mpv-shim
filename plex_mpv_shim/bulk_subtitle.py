@@ -42,7 +42,7 @@ def process_series(mode, url, player, m_raid=None, m_rsid=None):
             audio_list = [Audio(s.get("id"), s.get("languageCode"), s.get("title"),
                           s.get("displayTitle")) for s in partxml.findall("./Stream[@streamType='2']")]
             subtitle_list =  [Subtitle(s.get("id"), s.get("languageCode"), s.get("title"),
-                              "Forced" in s.get("displayTitle"), s.get("displayTitle"))
+                              "Forced" in s.get("extendedDisplayTitle"), s.get("extendedDisplayTitle"))
                               for s in partxml.findall("./Stream[@streamType='3']")]
             part = Part(partxml.get("id"), audio_list, subtitle_list)
 
@@ -68,10 +68,28 @@ def process_series(mode, url, player, m_raid=None, m_rsid=None):
                     partial_ct += 1
             elif mode == "external":
                 audio, _ = get_subbed(part)
+                if not audio and len(part.audio) == 1:
+                    audio = part.audio[0]
                 subtitle = None
                 possible_external = [x for x in part.subtitle if 'external' in x.plex_name.lower()]
                 if possible_external:
                     subtitle = possible_external[0]
+                if audio and subtitle:
+                    render_message("{0}: {1} ({2})".format(
+                        name, subtitle.plex_name, subtitle.name), show_text)
+                    aid, sid = audio.id, subtitle.id
+                    success_ct += 1
+            elif mode == "eng_sdh":
+                audio, _ = get_dubbed(part)
+                if not audio and len(part.audio) == 1:
+                    audio = part.audio[0]
+                subtitle = None
+                eng_subs = [x for x in part.subtitle if "eng" in x.plex_name.lower()]
+                possible_sdh = [x for x in eng_subs if x.name and 'sdh' in x.name.lower()]
+                if possible_sdh:
+                    subtitle = possible_sdh[0]
+                elif eng_subs:
+                    subtitle = eng_subs[0]
                 if audio and subtitle:
                     render_message("{0}: {1} ({2})".format(
                         name, subtitle.plex_name, subtitle.name), show_text)

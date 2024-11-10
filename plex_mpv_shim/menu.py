@@ -252,7 +252,7 @@ class OSDMenu(object):
         for i, subtitle_track in enumerate(subtitle_streams):
             sid = subtitle_track.get("id")
             self.menu_list.append([
-                "{0} ({1})".format(subtitle_track.get("displayTitle"), subtitle_track.get("title")),
+                "{0} ({1})".format(subtitle_track.get("extendedDisplayTitle"), subtitle_track.get("title")),
                 self.change_subtitle_menu_handle,
                 sid
             ])
@@ -317,6 +317,7 @@ class OSDMenu(object):
     def change_tracks_menu(self):
         self.put_menu("Select Audio/Subtitle for Series", [
             ("Japanese Audio w/ External Subtitles", self.change_tracks_handle, "external"),
+            ("English Audio w/ English Subtitles", self.change_tracks_handle, "eng_sdh"),
             ("English Audio", self.change_tracks_handle, "dubbed"),
             ("Japanese Audio w/ English Subtitles", self.change_tracks_handle, "subbed"),
             ("Manual by Track Index (Less Reliable)", self.change_tracks_manual_s1),
