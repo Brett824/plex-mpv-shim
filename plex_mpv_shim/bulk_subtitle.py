@@ -118,7 +118,9 @@ def process_series(mode, url, player, m_raid=None, m_rsid=None):
                     "subtitleStreamID": sid
                 }
                 url = "/library/parts/{0}".format(part.id)
-                requests.put(get_plex_url(urllib.parse.urljoin(xml.server_url, url), args), data=None)
+                response = requests.put(get_plex_url(urllib.parse.urljoin(xml.server_url, url), args, use_permanent_token=True), data=None)
+                if not response.ok:
+                    render_message("\tFailed API request to set subtitle", show_text)
             else:
                 render_message("{0}: Fail".format(name), show_text)
     

@@ -127,6 +127,7 @@ class PlayerManager(object):
             'script-opts': 'osc-layout=slimbox,osc-deadzonesize=.9,osc-valign=1.05',
             'scripts': scripts_opt,
             'log-file': log_dir,
+            'sub-ass-force-margins': 'yes'
         })
 
         if not (settings.mpv_ext and settings.mpv_ext_no_ovr):

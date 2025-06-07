@@ -71,7 +71,7 @@ def get_session(domain):
         plex_sessions[domain] = session
     return plex_sessions[domain]
 
-def get_plex_url(url, data=None, quiet=False):
+def get_plex_url(url, data=None, quiet=False, use_permanent_token=False):
     if not data:
         data = {}
 
@@ -81,7 +81,11 @@ def get_plex_url(url, data=None, quiet=False):
     if parsed_url.scheme != "https" and not settings.allow_http:
         raise ValueError("HTTP is not enabled in the configuration.")
 
-    if domain in plex_eph_tokens:
+    if use_permanent_token and os.getenv("PLEX_TOKEN"):
+        data.update({
+            "X-Plex-Token": os.getenv("PLEX_TOKEN")
+        })
+    elif domain in plex_eph_tokens:
         data.update({
             "X-Plex-Token": plex_eph_tokens[domain]
         })
