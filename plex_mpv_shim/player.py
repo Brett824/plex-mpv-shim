@@ -122,12 +122,9 @@ class PlayerManager(object):
         log_dir = conf_dir / "mpv.log"
         scripts_opt = ";".join(scripts)  # TODO windows only
 
-        # todo figure out how to put these in a file
         mpv_options.update({
-            'script-opts': 'osc-layout=slimbox,osc-deadzonesize=.9,osc-valign=1.05',
             'scripts': scripts_opt,
             'log-file': log_dir,
-            'sub-ass-force-margins': 'yes'
         })
 
         if not (settings.mpv_ext and settings.mpv_ext_no_ovr):

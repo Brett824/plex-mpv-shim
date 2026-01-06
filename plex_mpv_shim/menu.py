@@ -55,6 +55,7 @@ class OSDMenu(object):
         self.menu_selection = 0
         self.menu_tmp = None
         self.mouse_back = False
+        self.original_osd_border_style = playerManager._player.osd_border_style
         self.original_osd_color = playerManager._player.osd_back_color
         self.original_osd_size = playerManager._player.osd_font_size
 
@@ -109,7 +110,8 @@ class OSDMenu(object):
     def show_menu(self):
         self.is_menu_shown = True
         player = self.playerManager._player
-        player.osd_back_color = '#CC333333'
+        player.osd_border_style = 'background-box'
+        player.osd_back_color = '#CC000000'
         player.osd_font_size = 40
 
         if hasattr(player, 'osc'):
@@ -164,6 +166,7 @@ class OSDMenu(object):
         if self.is_menu_shown:
             player.osd_back_color = self.original_osd_color
             player.osd_font_size = self.original_osd_size
+            player.osd_border_style = self.original_osd_border_style
             player.show_text("",0,0)
             player.force_window = False
             player.keep_open = False
