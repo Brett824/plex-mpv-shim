@@ -96,6 +96,7 @@ class PlayerManager(object):
         self.credits_has_triggered = False
         self.current_sub_track = None
         self.last_sub_track = None
+        self.skipped = False
 
         if is_using_ext_mpv:
             mpv_options.update(
@@ -381,13 +382,13 @@ class PlayerManager(object):
         def handle_end(_name, reached_end):
             self.last_sub_track = None
             self.current_sub_track = None
-            if self._media_item and reached_end:
+            if self._media_item and reached_end and not self.skipped:
                 has_lock = self._finished_lock.acquire(False)
                 self.put_task(self.finished_callback, has_lock)
 
         @self._player.property_observer("playback-abort")
         def handle_end_idle(_name, value):
-            if self._media_item and value:
+            if self._media_item and value and not self.skipped:
                 has_lock = self._finished_lock.acquire(False)
                 self.put_task(self.finished_callback, has_lock)
 
@@ -449,6 +450,12 @@ class PlayerManager(object):
             if not self.last_sub_track and forced_or_signs(selected_sub_info[0]):
                 return
             self.current_sub_track = selected_sub
+
+        @self._player.event_callback('start-file')
+        def handle_start_file(event):
+            # this flag is set if we hit the "skipped" hot key to eof-reached/abort events double skipped
+            # reset when the new file started
+            self.skipped = False
 
     # Put a task to the event queue.
     # This ensures the task executes outside
@@ -697,6 +704,7 @@ class PlayerManager(object):
         if not self._media_item:
             return
 
+        self.skipped = True  # disables eof-reached/abort events until the next file starts
         self._media_item.set_played()
         self.play_next()
 
