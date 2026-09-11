@@ -436,7 +436,7 @@ class PlayerManager(object):
                 self.last_sub_track = self.current_sub_track
             elif selected_sub_info[0]["external"]:
                 # try to set the last sub track to english or first unknown
-                english_info = [x for x in self._player.track_list if x.get("type") == "sub" and x.get("lang") == "eng"]
+                english_info = [x for x in self._player.track_list if x.get("type") == "sub" and x.get("lang") in ("en", "eng")]
                 # remove "forced" only if there's multiple
                 if len(english_info) > 1:
                     english_info = [x for x in english_info if not forced_or_signs(x)]
@@ -672,26 +672,28 @@ class PlayerManager(object):
         if not self._media_item:
             return
 
+        # Only the callback that acquired _finished_lock may act on this end-of-file
+        # event. eof-reached and playback-abort both fire on a natural episode end, so
+        # a second (lock-less) callback can arrive after play() has already advanced
+        # self._media_item to the next episode - marking the wrong item as watched.
+        if not has_lock:
+            log.debug("PlayerManager::finished_callback No lock, skipping...")
+            return
+
         self._media_item.set_played()
 
         if self._media_item.is_multipart():
-            if has_lock:
-                log.debug("PlayerManager::finished_callback media is multi-part, checking for next part")
-                # Try to select the next part
-                next_part = self.__part+1
-                if self._media_item.select_part(next_part):
-                    self.__part = next_part
-                    log.debug("PlayerManager::finished_callback starting next part")
-                    self.play(self._media_item)
-            else:
-                log.debug("PlayerManager::finished_callback No lock, skipping...")
-        
+            log.debug("PlayerManager::finished_callback media is multi-part, checking for next part")
+            # Try to select the next part
+            next_part = self.__part+1
+            if self._media_item.select_part(next_part):
+                self.__part = next_part
+                log.debug("PlayerManager::finished_callback starting next part")
+                self.play(self._media_item)
+
         elif self._media_item.parent.has_next and settings.auto_play:
-            if has_lock:
-                log.debug("PlayerManager::finished_callback starting next episode")
-                self.play(self._media_item.parent.get_next().get_media_item(0))
-            else:
-                log.debug("PlayerManager::finished_callback No lock, skipping...")
+            log.debug("PlayerManager::finished_callback starting next episode")
+            self.play(self._media_item.parent.get_next().get_media_item(0))
 
         else:
             if settings.media_ended_cmd:
