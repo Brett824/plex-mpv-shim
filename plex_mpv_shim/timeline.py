@@ -47,21 +47,25 @@ class TimelineManager(threading.Thread):
     def run(self):
         force_next = False
         while not self.halt:
-            if (playerManager._player and playerManager._media_item and (not settings.idle_when_paused
-                or not playerManager.is_paused())) or force_next:
-                if not playerManager.is_paused() or force_next:
-                    self.SendTimelineToSubscribers()
-                self.delay_idle()
-            force_next = False
-            if self.idleTimer.elapsed() > settings.idle_cmd_delay and not self.is_idle:
-                if settings.idle_when_paused and settings.stop_idle and playerManager._media_item:
-                    playerManager.stop()
-                if settings.idle_cmd:
-                    os.system(settings.idle_cmd)
-                self.is_idle = True
-            if self.trigger.wait(1):
-                force_next = True
-                self.trigger.clear()
+            try:
+                if (playerManager._player and playerManager._media_item and (not settings.idle_when_paused
+                    or not playerManager.is_paused())) or force_next:
+                    if not playerManager.is_paused() or force_next:
+                        self.SendTimelineToSubscribers()
+                    self.delay_idle()
+                force_next = False
+                if self.idleTimer.elapsed() > settings.idle_cmd_delay and not self.is_idle:
+                    if settings.idle_when_paused and settings.stop_idle and playerManager._media_item:
+                        playerManager.stop()
+                    if settings.idle_cmd:
+                        os.system(settings.idle_cmd)
+                    self.is_idle = True
+                if self.trigger.wait(1):
+                    force_next = True
+                    self.trigger.clear()
+            except Exception as e:
+                log.warning(f"TimelineManager::run() exception: {e}, pausing timeline updates for 10 seconds")
+                time.sleep(10)
 
     def delay_idle(self):
         self.idleTimer.restart()
@@ -169,7 +173,8 @@ class TimelineManager(threading.Thread):
 
         # The playback_time value can take on the value of none, probably
         # when playback is complete. This avoids the thread crashing.
-        if media_item and not player.playback_abort and player.playback_time:
+        playback_time = player.playback_time
+        if media_item and not player.playback_abort and playback_time:
             self.last_media_item = media_item
             media = media_item.parent
 
@@ -180,7 +185,7 @@ class TimelineManager(threading.Thread):
                 options["type"]          = "video"
                 options["location"]      = "fullScreenMusic"
 
-            options["time"]              = int(player.playback_time * 1e3)
+            options["time"]              = int(playback_time * 1e3)
             options["autoPlay"]          = '1' if settings.auto_play else '0'
             
             aid, sid = playerManager.get_track_ids()
